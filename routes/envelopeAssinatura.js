@@ -51,8 +51,6 @@ const axios = require("axios");
  *                   type: string
  *                   example: "Erro ao criar envelope"
  */
-
-// Função para criar um envelope
 router.post("", async (req, res) => {
   try {
     console.log(process.env.BASE_URL);

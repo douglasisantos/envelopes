@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-
 /**
  * @swagger
  * /signatario:
@@ -51,8 +50,6 @@ const axios = require("axios");
  *                   type: string
  *                   example: "Erro ao criar envelope"
  */
-
-// Função para inserir um signatário no envelope
 router.post("", async (req, res) => {
   try {
     const response = await axios.post(

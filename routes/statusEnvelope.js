@@ -52,8 +52,6 @@ const axios = require("axios");
  *                   type: string
  *                   example: "Erro ao criar envelope"
  */
-
-// Função para consultar o status de um envelope
 router.post("", async (req, res) => {
   try {
     const response = await axios.post(
