@@ -54,36 +54,27 @@ const axios = require("axios");
  */
 router.post("", async (req, res) => {
   try {
-    const response = await axios.post(
+    const { params } = req.body;
+    const { data } = await axios.post(
       `${process.env.BASE_URL}getDadosEnvelope`,
-      {
-        token: process.env.TOKEN,
-        params: req.body.params,
-      },
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      }
+      { token: process.env.TOKEN, params },
+      { headers: { Accept: "application/json", "Content-Type": "application/json" } }
     );
 
-    let status = {
+    const statusMap = {
       1: "Em construção",
       2: "Aguardando Assinaturas",
-      3: "Concluído", 
+      3: "Concluído",
       4: "Arquivado",
       5: "Cancelado",
       6: "Expirado",
-    };  
-    return res.json({'status': status[response.data.response.status]});
+    };
+
+    return res.json({ status: statusMap[data.response.status] });
   } catch (error) {
-    console.log(error);
-    if (error.response && error.response.data.error) {
-      res.status(400).json({ error: error.response.data.error });
-    } else {
-      res.status(500).json({ error: "Erro ao criar envelope" });
-    }
+    console.error(error);
+    const errorMessage = error.response?.data?.error || "Erro ao criar envelope";
+    res.status(error.response ? 400 : 500).json({ error: errorMessage });
   }
 });
 

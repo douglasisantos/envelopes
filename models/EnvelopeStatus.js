@@ -5,7 +5,7 @@ const EnvelopeStatus = sequelize.define("EnvelopeStatus", {
   idEnvelope: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
+   },
   idRepositorio: {
     type: DataTypes.STRING,
     allowNull: false,

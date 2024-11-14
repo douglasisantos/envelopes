@@ -3,9 +3,58 @@ const router = express.Router();
 const axios = require("axios");
 const EnvelopeStatus = require("../models/EnvelopeStatus");
 
-router.post("", async (req, res) => {
+/**
+ * @swagger
+ * /envelopeStatus:
+ *   post:
+ *     summary: Obtém e armazena dados do envelope com base no ID fornecido
+ *     description: Retorna o status do envelope e armazena detalhes do envelope no banco de dados.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               params:
+ *                 type: object
+ *                 description: Parâmetros necessários para buscar o status do envelope.
+ *                 example: { "idEnvelope": 123 }
+ *     responses:
+ *       200:
+ *         description: Retorna o status do envelope e armazena as informações
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "Concluído"
+ *       400:
+ *         description: Erro de validação nos parâmetros enviados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Parâmetro inválido"
+ *       500:
+ *         description: Erro interno ao obter os dados do envelope
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erro ao criar envelope"
+ */
+router.post("/", async (req, res) => {
   try {
-    const response = await axios.post(
+    const { data } = await axios.post(
       `${process.env.BASE_URL}getDadosEnvelope`,
       {
         token: process.env.TOKEN,
@@ -19,7 +68,7 @@ router.post("", async (req, res) => {
       }
     );
 
-    let status = {
+    const statusMapping = {
       1: "Em construção",
       2: "Aguardando Assinaturas",
       3: "Concluído",
@@ -27,48 +76,45 @@ router.post("", async (req, res) => {
       5: "Cancelado",
       6: "Expirado",
     };
-    
-    console.log(response.data);
 
-    const statusDescription = status[response.data.response.status];
+    console.log(data);
 
-    const data = response.data.response; 
+    const statusDescription = statusMapping[data.response.status];
+    const envelopeData = data.response;
+
     await EnvelopeStatus.upsert({
-      idEnvelope: data.id,
-      idRepositorio: data.Repositorio.id,
-      idUsuario: data.Usuario.id,
-      descricao: data.descricao,
-      conteudo: data.conteudo,
-      incluirHashTodasPaginas: data.incluirHashTodasPaginas,
-      permitirDespachos: data.permitirDespachos,
-      usarOrdem: data.usarOrdem,
-      hashSHA256: data.hashSHA256,
-      hashSHA512: data.hashSHA512,
-      mensagem: data.mensagem,
-      mensagemObservadores: data.mensagemObservadores,
-      motivoCancelamento: data.motivoCancelamento,
-      numeroPaginas: parseInt(data.numeroPaginas, 10),
-      status: data.status,
-      dataHoraCriacao: new Date(data.dataHoraCriacao),
-      dataHoraConclusao: new Date(data.dataHoraConclusao),
-      dataHoraAlteracao: new Date(data.dataHoraAlteracao),
-      objetoContrato: data.objetoContrato,
-      statusContrato: data.statusContrato,
-      numContrato: data.numContrato,
-      descricaoContratante: data.descricaoContratante,
-      descricaoContratado: data.descricaoContratado,
-      bloquearDesenhoPaginas: data.bloquearDesenhoPaginas,
-      envelope: data.Envelope,
+      idEnvelope: envelopeData.id,
+      idRepositorio: envelopeData.Repositorio.id,
+      idUsuario: envelopeData.Usuario.id,
+      descricao: envelopeData.descricao,
+      conteudo: envelopeData.conteudo,
+      incluirHashTodasPaginas: envelopeData.incluirHashTodasPaginas,
+      permitirDespachos: envelopeData.permitirDespachos,
+      usarOrdem: envelopeData.usarOrdem,
+      hashSHA256: envelopeData.hashSHA256,
+      hashSHA512: envelopeData.hashSHA512,
+      mensagem: envelopeData.mensagem,
+      mensagemObservadores: envelopeData.mensagemObservadores,
+      motivoCancelamento: envelopeData.motivoCancelamento,
+      numeroPaginas: parseInt(envelopeData.numeroPaginas, 10),
+      status: envelopeData.status,
+      dataHoraCriacao: new Date(envelopeData.dataHoraCriacao),
+      dataHoraConclusao: new Date(envelopeData.dataHoraConclusao),
+      dataHoraAlteracao: new Date(envelopeData.dataHoraAlteracao),
+      objetoContrato: envelopeData.objetoContrato,
+      statusContrato: envelopeData.statusContrato,
+      numContrato: envelopeData.numContrato,
+      descricaoContratante: envelopeData.descricaoContratante,
+      descricaoContratado: envelopeData.descricaoContratado,
+      bloquearDesenhoPaginas: envelopeData.bloquearDesenhoPaginas,
+      envelope: envelopeData.Envelope,
     });
 
     return res.json({ status: statusDescription });
   } catch (error) {
-    console.log(error);
-    if (error.response && error.response.data.error) {
-      res.status(400).json({ error: error.response.data.error });
-    } else {
-      res.status(500).json({ error: "Erro ao criar envelope" });
-    }
+    console.error(error);
+    const errorMessage = error.response?.data?.error || "Erro ao criar envelope";
+    res.status(error.response ? 400 : 500).json({ error: errorMessage });
   }
 });
 
